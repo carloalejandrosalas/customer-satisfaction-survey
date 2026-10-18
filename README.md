@@ -1,43 +1,58 @@
-# Inventory and customer management system
+<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
-A small PHP application built on CodeIgniter 3. It provides a login flow and partial CRUD screens for customers and products. The repository also contains employee-related stubs; the employee workflow and several product actions are not implemented.
+<p align="center">
+<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+</p>
 
-## Requirements
+## About Laravel
 
-- A PHP runtime compatible with the CodeIgniter version bundled in `system/`.
-- MySQL or MariaDB with the PHP MySQLi extension.
-- A web server configured to serve this repository and pass application requests to `index.php`.
-- A database containing the tables and columns expected by the application.
+Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
 
-The default route opens the login page. CodeIgniter and the application are in the repository root and `application/`; there is no separate frontend build.
+- [Simple, fast routing engine](https://laravel.com/docs/routing).
+- [Powerful dependency injection container](https://laravel.com/docs/container).
+- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
+- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
+- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
+- [Robust background job processing](https://laravel.com/docs/queues).
+- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
 
-## Local configuration
+Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
-1. Copy `.env.example` to `.env` and replace both example passwords with local development values. `.env` is gitignored; do not use these example values outside local development.
-2. Start MariaDB and Adminer with `docker compose up -d`. MariaDB is available on `127.0.0.1:3306`; Adminer is at <http://localhost:8080>. In Adminer, use server `mariadb`, database `telcom`, and the `MARIADB_USER` / `MARIADB_PASSWORD` values from `.env`.
-3. Configure `application/config/database.php` for local access: use hostname `127.0.0.1`, the configured MariaDB username/password, and database `telcom`. CodeIgniter does not load the Compose `.env` automatically. Do not commit local credentials.
-4. Provision a compatible application schema. The Compose setup creates an empty database only; no schema dump, DDL, migrations, or seed data are included. See [docs/DATABASE_STRUCTURE.md](docs/DATABASE_STRUCTURE.md) for the code-derived table and column inventory, including unknown schema details.
-5. Configure the web server's document root and rewrite behavior for CodeIgniter. Browse to the application through `index.php/login` (or the equivalent URL for your server configuration).
-6. Sign in with an account present in the `usuario` table. No seed data or default credentials are provided.
+## Learning Laravel
 
-The database and Adminer ports can be changed with `DB_PORT` and `ADMINER_PORT` in `.env`. To stop the services without removing database data, run `docker compose down`. The named `mariadb_data` volume persists across restarts.
+Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
 
-## Application areas
+In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
 
-- **Login:** `application/controllers/login.php`, `application/models/usuario_model.php`.
-- **Customers:** `application/controllers/cliente.php`, `application/models/cliente_model.php`.
-- **Products:** `application/controllers/producto.php`, `application/models/producto_model.php`.
-- **Employees:** controller and model exist, but the employee model methods are empty.
+You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
 
-Customer deactivation and active-list filtering use a `status` column. Product listing also filters by `status`; the product controller's delete and modification actions are currently empty. Confirm actual database behavior and schema before relying on assumptions about defaults or constraints.
+## Agentic Development
 
-## Development and tests
+Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
 
-There is no project-specific test suite or build script evident in the repository. For PHP changes, use `php -l path/to/changed-file.php` for syntax validation and manually test the affected route against a configured database.
+```bash
+composer require laravel/boost --dev
 
-## Further documentation
+php artisan boost:install
+```
 
-- [AI agent context](docs/AI_CONTEXT.md) — architecture, route behavior, and the code-derived table inventory.
-- [Database structure](docs/DATABASE_STRUCTURE.md) — table and column usage inferred from the current application code.
-- [Docker Compose](compose.yaml) — local MariaDB and Adminer services.
-- [CodeIgniter user guide](user_guide/index.html) — framework documentation bundled with the repository.
+Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+
+## Contributing
+
+Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+
+## Code of Conduct
+
+In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+
+## Security Vulnerabilities
+
+If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+
+## License
+
+The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
