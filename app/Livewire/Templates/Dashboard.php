@@ -11,10 +11,6 @@ class Dashboard extends Component
 {
     public string $timeRange = '7d';
 
-    public bool $showProfileModal = false;
-
-    public bool $showSettingsModal = false;
-
     public array $quickStats = [
         ['label' => 'Total Revenue', 'value' => '$48,294.00', 'change' => '+12.3%', 'trend' => 'up'],
         ['label' => 'Active Subscriptions', 'value' => '1,429', 'change' => '+4.1%', 'trend' => 'up'],
@@ -38,16 +34,6 @@ class Dashboard extends Component
             ['id' => 3, 'user' => 'Marcus Brody', 'action' => 'Failed login attempt', 'time' => '2 hours ago', 'status' => 'danger'],
             ['id' => 4, 'user' => 'Elena Fisher', 'action' => 'Invited 3 team members', 'time' => '3 hours ago', 'status' => 'success'],
         ];
-    }
-
-    public function openProfileModal(): void
-    {
-        $this->showProfileModal = true;
-    }
-
-    public function openSettingsModal(): void
-    {
-        $this->showSettingsModal = true;
     }
 
     public function render()

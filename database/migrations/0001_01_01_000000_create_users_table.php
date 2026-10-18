@@ -24,6 +24,7 @@ return new class extends Migration
             $table->enum('role', RoleEnum::cases());
             $table->string('phone_number');
             $table->boolean('change_password')->default(false);
+            $table->json('settings')->nullable();
             $table->softDeletes();
             $table->rememberToken();
             $table->timestamps();

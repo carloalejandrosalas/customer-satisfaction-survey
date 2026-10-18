@@ -7,6 +7,7 @@ use App\Livewire\Categories;
 use App\Livewire\Customers;
 use App\Livewire\Products;
 use App\Livewire\Profile;
+use App\Livewire\Settings;
 use App\Livewire\Templates\Dashboard;
 use App\Livewire\Users;
 use Illuminate\Support\Facades\Route;
@@ -30,6 +31,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 Route::middleware(['auth', 'verified', EnsurePasswordIsChanged::class])->group(function () {
     Route::get('/dashboard', Dashboard::class)->name('dashboard');
+    Route::get('/settings', Settings\Show::class)->name('settings');
     Route::get('/users', Users\Index::class)->name('users.index');
     Route::get('/products', Products\Index::class)->name('products.index');
     Route::get('/categories', Categories\Index::class)->name('categories.index');

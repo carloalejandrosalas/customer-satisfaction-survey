@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'state', 'city', 'address', 'role', 'phone_number', 'change_password'])]
+#[Fillable(['name', 'email', 'password', 'state', 'city', 'address', 'role', 'phone_number', 'change_password', 'settings'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -29,6 +29,15 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'change_password' => 'boolean',
+            'settings' => 'array',
         ];
+    }
+
+    /**
+     * Read a personal preference, falling back to the given default.
+     */
+    public function setting(string $key, mixed $default = null): mixed
+    {
+        return data_get($this->settings, $key, $default);
     }
 }

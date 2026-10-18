@@ -11,6 +11,24 @@
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @auth
+        <script>
+            // Apply the signed-in user's saved theme and, on first visit to this device, the sidebar default.
+            (() => {
+                const theme = @js(auth()->user()->setting('theme', 'system'));
+                if (theme === 'system') {
+                    localStorage.removeItem('flux.appearance');
+                } else {
+                    localStorage.setItem('flux.appearance', theme);
+                }
+
+                if (localStorage.getItem('flux-sidebar-collapsed-desktop') === null) {
+                    localStorage.setItem('flux-sidebar-collapsed-desktop',
+                        JSON.stringify(@js(auth()->user()->setting('sidebar', 'expanded')) === 'collapsed'));
+                }
+            })();
+        </script>
+    @endauth
     @fluxAppearance
 </head>
 
@@ -39,7 +57,7 @@
 
                 <flux:menu>
                     <flux:menu.item icon="user" :href="route('profile')" wire:navigate>Profile</flux:menu.item>
-                    <flux:menu.item icon="cog-6-tooth" wire:click="openSettingsModal">Settings</flux:menu.item>
+                    <flux:menu.item icon="cog-6-tooth" :href="route('settings')" wire:navigate>Settings</flux:menu.item>
                     <flux:menu.separator />
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
@@ -61,7 +79,7 @@
 
                 <flux:menu>
                     <flux:menu.item icon="user" :href="route('profile')" wire:navigate>Profile</flux:menu.item>
-                    <flux:menu.item icon="cog-6-tooth" wire:click="openSettingsModal">Settings</flux:menu.item>
+                    <flux:menu.item icon="cog-6-tooth" :href="route('settings')" wire:navigate>Settings</flux:menu.item>
                     <flux:menu.separator />
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
