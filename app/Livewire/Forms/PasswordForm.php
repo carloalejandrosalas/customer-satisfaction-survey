@@ -37,6 +37,8 @@ class PasswordForm extends Form
             'change_password' => false,
         ]);
 
+        activity('auth')->performedOn($user)->causedBy($user)->event('password_changed')->log('Password changed');
+
         $this->reset();
     }
 }

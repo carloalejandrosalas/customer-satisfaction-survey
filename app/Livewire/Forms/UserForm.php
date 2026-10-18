@@ -142,6 +142,10 @@ class UserForm extends Form
             'change_password' => true,
         ]);
 
+        if ($this->user) {
+            activity('auth')->performedOn($this->user)->causedBy(auth()->user())->event('password_reset')->log('Password reset by administrator');
+        }
+
         $this->resetForm();
     }
 

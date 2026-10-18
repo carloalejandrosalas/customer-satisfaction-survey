@@ -38,5 +38,12 @@ return [
             'route' => 'customers.index',
             'active' => 'customers.*',
         ],
+        [
+            'label' => 'Activity Log',
+            'icon' => 'clock',
+            'route' => 'activity-log.index',
+            'active' => 'activity-log.*',
+            'can' => 'view-activity-log',
+        ],
     ],
 ];

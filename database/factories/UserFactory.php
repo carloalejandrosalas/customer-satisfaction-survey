@@ -35,9 +35,9 @@ class UserFactory extends Factory
             'city' => fake()->city(),
             'address' => fake()->address(),
             'role' => fake()->randomElement([
-                RoleEnum::OPERATOR,
-                RoleEnum::SUPERVISOR,
-                RoleEnum::TECHNICIAN,
+                RoleEnum::OPERATOR->name,
+                RoleEnum::SUPERVISOR->name,
+                RoleEnum::TECHNICIAN->name,
             ]),
             'phone_number' => fake()->phoneNumber(),
             'change_password' => false,
@@ -62,7 +62,7 @@ class UserFactory extends Factory
             'name' => $name !== null ? $name : fake()->name(),
             'email' => $email !== null ? $email : fake()->unique()->safeEmail(),
             'password' => Hash::make($finalPassword),
-            'role' => RoleEnum::ADMIN,
+            'role' => RoleEnum::ADMIN->name,
         ]);
     }
 }

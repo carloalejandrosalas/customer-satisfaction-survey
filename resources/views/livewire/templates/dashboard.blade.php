@@ -6,119 +6,65 @@
             <flux:select.option value="30d">Last 30 days</flux:select.option>
             <flux:select.option value="12m">Last 12 months</flux:select.option>
         </flux:select>
-
-        <flux:button variant="primary" icon="arrow-path" wire:click="$refresh" wire:loading.attr="disabled"
-            wire:target="$refresh" class="w-full sm:w-auto">
-            Refresh
-        </flux:button>
     </x-page-header>
 
-
-    <section aria-label="Key metrics" class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        @foreach ($quickStats as $stat)
-            <flux:card wire:key="quick-stat-{{ str($stat['label'])->slug() }}"
-                class="flex h-full flex-col justify-between gap-5 rounded-2xl border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:p-6">
-                <div class="flex items-start justify-between gap-3">
-                    <flux:text class="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                        {{ $stat['label'] }}
-                    </flux:text>
-                    <flux:badge size="sm" variant="success" rounded
-                        :icon="$stat['trend'] === 'up' ? 'arrow-up-right' : 'arrow-down-right'">
-                        {{ $stat['change'] }}
-                    </flux:badge>
-                </div>
-
-                <div class="space-y-1">
-                    <p class="text-3xl font-semibold tracking-tight text-zinc-950 dark:text-white">
-                        {{ $stat['value'] }}
-                    </p>
-                    <flux:text class="text-xs text-zinc-500 dark:text-zinc-400">Compared with the previous period
-                    </flux:text>
+    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        @foreach ($this->stats as $stat)
+            <flux:card>
+                <flux:text>{{ $stat['label'] }}</flux:text>
+                <flux:heading size="xl" class="mt-1">{{ number_format($stat['value']) }}</flux:heading>
+                <div class="mt-2 flex items-center gap-2 text-sm">
+                    <span class="font-medium">+{{ number_format($stat['new']) }} new</span>
+                    @if ($stat['change'] !== null)
+                        <flux:badge size="sm" :color="$stat['change'] >= 0 ? 'green' : 'red'">
+                            {{ $stat['change'] >= 0 ? '+' : '' }}{{ $stat['change'] }}%
+                        </flux:badge>
+                    @endif
                 </div>
             </flux:card>
         @endforeach
-    </section>
+    </div>
 
-    <section aria-label="Analytics and activity" class="grid grid-cols-1 items-stretch gap-5 xl:grid-cols-3">
-        <flux:card
-            class="flex h-full flex-col gap-6 rounded-2xl border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:p-6 xl:col-span-2">
-            <div class="flex items-start justify-between gap-4">
-                <div class="space-y-1">
-                    <flux:heading size="lg">Performance analytics</flux:heading>
-                    <flux:subheading>Review performance trends over time.</flux:subheading>
-                </div>
-                <flux:dropdown>
-                    <flux:button variant="ghost" icon="ellipsis-horizontal" size="sm"
-                        aria-label="Analytics options" />
-                    <flux:menu>
-                        <flux:menu.item icon="arrow-down-tray">Export CSV</flux:menu.item>
-                        <flux:menu.item icon="printer">Print report</flux:menu.item>
-                    </flux:menu>
-                </flux:dropdown>
+    <div class="grid gap-6 lg:grid-cols-3">
+        <flux:card class="lg:col-span-2">
+            <flux:heading size="lg">New records</flux:heading>
+            <flux:text class="mb-4">Users, customers, products and categories created in the selected period.</flux:text>
+            @php($max = max(1, collect($this->chart)->max('count')))
+            <div class="flex h-48 items-end gap-1">
+                @foreach ($this->chart as $bar)
+                    <div class="group flex h-full flex-1 flex-col justify-end" title="{{ $bar['label'] }}: {{ $bar['count'] }}">
+                        <div class="w-full rounded-t bg-indigo-500 transition group-hover:bg-indigo-400"
+                            style="height: {{ $bar['count'] > 0 ? max(4, round($bar['count'] / $max * 100)) : 0 }}%"></div>
+                    </div>
+                @endforeach
             </div>
-
-            <div
-                class="flex min-h-72 flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-zinc-300 bg-zinc-50/70 px-5 py-10 text-center dark:border-zinc-700 dark:bg-zinc-950/40">
-                <span
-                    class="mb-4 flex size-12 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-300">
-                    <flux:icon name="chart-bar" class="size-6" />
-                </span>
-                <flux:heading size="sm">Analytics will appear here</flux:heading>
-                <flux:text class="mt-1 max-w-sm text-sm text-zinc-500 dark:text-zinc-400">
-                    Connect a chart source to visualize your performance over the selected time range.
-                </flux:text>
+            <div class="mt-2 flex justify-between text-xs text-zinc-500">
+                <span>{{ $this->chart[0]['label'] }}</span>
+                <span>{{ $this->chart[count($this->chart) - 1]['label'] }}</span>
             </div>
         </flux:card>
 
-        <flux:card
-            class="flex h-full flex-col gap-5 rounded-2xl border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:p-6">
-            <div class="flex items-start justify-between gap-3">
-                <div class="space-y-1">
-                    <flux:heading size="lg">Recent activity</flux:heading>
-                    <flux:subheading>Latest updates from your team.</flux:subheading>
-                </div>
-                <flux:badge size="sm" color="zinc" rounded>{{ count($this->recentActivity) }}</flux:badge>
+        <flux:card>
+            <div class="mb-4 flex items-center justify-between">
+                <flux:heading size="lg">Recent activity</flux:heading>
+                @if ($this->canViewActivity)
+                    <flux:link :href="route('activity-log.index')" wire:navigate class="text-sm">View all</flux:link>
+                @endif
             </div>
-
-            @if (count($this->recentActivity))
-                <div class="divide-y divide-zinc-100 dark:divide-zinc-800">
-                    @foreach ($this->recentActivity as $activity)
-                        <div wire:key="recent-activity-{{ $activity['id'] }}"
-                            class="flex items-start gap-3 py-4 first:pt-0 last:pb-0">
-                            <span @class([
-                                'flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold',
-                                'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' =>
-                                    $activity['status'] === 'success',
-                                'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300' =>
-                                    $activity['status'] === 'danger',
-                                'bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300' => !in_array(
-                                    $activity['status'],
-                                    ['success', 'danger'],
-                                    true),
-                            ])>
-                                {{ str($activity['user'])->initials() }}
-                            </span>
-                            <div class="min-w-0 flex-1">
-                                <p class="truncate text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                                    {{ $activity['user'] }}
-                                </p>
-                                <p class="mt-0.5 text-sm leading-5 text-zinc-500 dark:text-zinc-400">
-                                    {{ $activity['action'] }}
-                                </p>
-                                <p class="mt-1.5 text-xs text-zinc-400 dark:text-zinc-500">
-                                    {{ $activity['time'] }}
-                                </p>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
+            @if (! $this->canViewActivity)
+                <flux:text>Activity is visible to supervisors, technicians and administrators.</flux:text>
             @else
-                <div
-                    class="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-zinc-300 px-5 py-10 text-center dark:border-zinc-700">
-                    <flux:icon name="inbox" class="mb-3 size-7 text-zinc-400" />
-                    <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">No recent activity yet.</flux:text>
-                </div>
+                <ul class="space-y-4">
+                    @forelse ($this->recentActivity as $activity)
+                        <li>
+                            <div class="text-sm font-medium">{{ $activity->description }}</div>
+                            <div class="text-xs text-zinc-500">{{ $activity->causer?->name ?? 'System' }} · {{ $activity->created_at->diffForHumans() }}</div>
+                        </li>
+                    @empty
+                        <flux:text>No activity yet.</flux:text>
+                    @endforelse
+                </ul>
             @endif
         </flux:card>
-    </section>
+    </div>
 </x-page>

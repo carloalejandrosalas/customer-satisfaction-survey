@@ -1,5 +1,7 @@
 <?php
 
+use App\Livewire\Templates\Dashboard;
+use App\Models\Customer;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -42,4 +44,26 @@ it('logs out and redirects to the login page', function () {
 
     assertGuest();
     expect(session()->has('dashboard.logout-test'))->toBeFalse();
+});
+
+it('shows real totals, trends and recent activity', function () {
+    $admin = User::factory()->create(['role' => 'ADMIN']);
+    Customer::factory()->count(3)->create();
+    actingAs($admin);
+
+    Livewire\Livewire::test(Dashboard::class)
+        ->assertSee('Customers')
+        ->assertSee('Recent activity')
+        ->assertSee('created')
+        ->set('timeRange', '12m')
+        ->assertOk()
+        ->set('timeRange', '24h')
+        ->assertOk();
+});
+
+it('hides recent activity from operators', function () {
+    actingAs(User::factory()->create(['role' => 'OPERATOR']));
+
+    Livewire\Livewire::test(Dashboard::class)
+        ->assertSee('Activity is visible to supervisors');
 });

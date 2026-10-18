@@ -58,7 +58,7 @@
                     class="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wider text-zinc-400 in-data-flux-sidebar-collapsed-desktop:hidden dark:text-zinc-500">
                     Menu
                 </p>
-                @foreach (config('navigation.sidebar_links') as $link)
+                @foreach (collect(config('navigation.sidebar_links'))->filter(fn ($link) => ! isset($link['can']) || auth()->user()->can($link['can'])) as $link)
                     <flux:sidebar.item :icon="$link['icon']" :href="route($link['route'])" wire:navigate
                         :current="request()->routeIs($link['active'] ?? $link['route'])"
                         class="h-11! gap-3.5 **:data-content:text-base **:data-flux-icon:size-5 data-current:bg-indigo-50! data-current:text-indigo-700! data-current:font-semibold dark:data-current:bg-indigo-500/15! dark:data-current:text-indigo-300!">

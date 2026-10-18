@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Middleware\EnsurePasswordIsChanged;
+use App\Livewire\ActivityLog;
 use App\Livewire\Auth\Login;
 use App\Livewire\Categories;
 use App\Livewire\Customers;
@@ -39,4 +40,5 @@ Route::middleware(['auth', 'verified', EnsurePasswordIsChanged::class])->group(f
         return 'surveys';
     })->name('surveys.index');
     Route::get('/customers', Customers\Index::class)->name('customers.index');
+    Route::get('/activity-log', ActivityLog\Index::class)->name('activity-log.index');
 });
