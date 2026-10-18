@@ -5,6 +5,7 @@ namespace App\Livewire\Users;
 use App\Livewire\Forms\UserForm;
 use App\Models\User;
 use Flux\Flux;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -87,7 +88,7 @@ class Index extends Component
      */
     public function deleteUser(): void
     {
-        if ($this->selectedUser && $this->selectedUser->isNot(auth()->user())) {
+        if ($this->selectedUser && $this->selectedUser->isNot(Auth::user())) {
             $this->selectedUser->delete();
         }
 
