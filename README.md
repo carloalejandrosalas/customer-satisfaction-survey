@@ -1,58 +1,56 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Customer Satisfaction Survey
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+An admin platform for managing customers, products and customer satisfaction surveys. Built with Laravel 13, Livewire 4, Flux UI (free) and Tailwind CSS 4. The whole interface is in English.
 
-## About Laravel
+## Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Dashboard**: totals and trends for users, customers, products and categories over a selectable range (24h, 7d, 30d, 12m), a chart of new records, and recent activity.
+- **Users**: CRUD, roles, admin password reset (forces a password change on next sign in).
+- **Customers, Products, Categories**: CRUD with search, sorting and pagination (10 rows per page). Products support image uploads. Categories with products cannot be deleted.
+- **Profile**: edit your own details and change your password.
+- **Settings**: per-user theme (light, dark, system) and sidebar preference.
+- **Activity Log**: audit trail of model changes, sign ins, sign outs, failed sign ins and password changes. Visible to administrators, supervisors and technicians only.
+- **Surveys**: not implemented yet (the tables exist; the page is a placeholder).
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+All main entities use soft deletes.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Roles
 
-## Learning Laravel
+`ADMIN`, `SUPERVISOR`, `TECHNICIAN`, `OPERATOR` (`App\RoleEnum`, stored as the case name). Only the activity log is role-restricted for now.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Requirements
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+PHP 8.5, Composer, Node with pnpm, and SQLite (default) or MariaDB/MySQL.
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Setup
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+composer setup            # installs dependencies, creates .env, key, migrates, builds assets
+php artisan migrate:fresh --seed
+php artisan storage:link  # product images
+composer dev              # serves the app and Vite
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+The seeder creates an admin user from `DEFAULT_ADMIN_NAME`, `DEFAULT_ADMIN_EMAIL` and `DEFAULT_ADMIN_PASSWORD` (defaults: `ADMIN`, `admin@localhost.com`, `password`), plus sample users, categories, products and customers. Change the defaults outside local development.
 
-## Contributing
+Optional MariaDB and Adminer via Docker: copy `.env.docker.example`, set the credentials, then `docker compose up -d` and point `DB_*` in `.env` at it.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Testing and formatting
 
-## Code of Conduct
+```bash
+php artisan test --compact
+vendor/bin/pint --dirty
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+`ExampleTest` currently fails because `/` redirects to the login page.
 
-## Security Vulnerabilities
+## Structure
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+- `app/Livewire/<Module>/Index.php`: one full-page Livewire component per module, using the `WithSearchAndSort` trait (`app/Livewire/Concerns`).
+- `app/Livewire/Forms/`: Livewire form objects holding validation and persistence per entity.
+- `app/Models/Concerns/Auditable.php`: adds activity logging to a model (spatie/laravel-activitylog).
+- `resources/views/livewire/`: component views; `resources/views/components/`: reusable `x-page`, `x-page-header` and `x-common.delete-confirmation`.
+- `config/navigation.php`: sidebar links (optional `can` gate per link).
+- `routes/web.php`: guest login; authenticated routes, with the password-change middleware (`EnsurePasswordIsChanged`) on everything except profile and logout.
 
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+More detail for contributors and AI agents: [docs/AI_CONTEXT.md](docs/AI_CONTEXT.md) and [docs/DATABASE_STRUCTURE.md](docs/DATABASE_STRUCTURE.md).

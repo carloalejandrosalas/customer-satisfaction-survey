@@ -1,79 +1,52 @@
 # AI agent context
 
-This document records application behavior visible in the checked-in code. It is not a database contract: there is no schema dump, DDL, or migration history in the repository. Verify all schema details against the deployed database before writing migrations or changing persistence logic.
+Customer satisfaction survey admin app. Stack: Laravel 13, Livewire 4 (class components with separate Blade views), Flux UI 2 (free edition), Tailwind CSS 4, Pest 5, spatie/laravel-activitylog 5. Generic Laravel/Boost rules live in `AGENTS.md` and `CLAUDE.md` (generated; do not edit by hand).
 
-For the standalone table and column inventory, see [DATABASE_STRUCTURE.md](DATABASE_STRUCTURE.md).
+For the schema, see [DATABASE_STRUCTURE.md](DATABASE_STRUCTURE.md).
 
-## Project structure and request flow
+## Architecture
 
-- The application is built on the vendored CodeIgniter framework. The front controller is `index.php`; application code lives in `application/`.
-- `application/config/routes.php` sets `login` as the default controller. With CodeIgniter's default routing, application endpoints follow `index.php/<controller>/<method>/<arguments>`.
-- `application/config/autoload.php` loads the database and session libraries and the URL helper.
-- `Login` authenticates through `Usuario_model`, starts a session with the `username` key on success, and destroys the session on logout. The `Cliente`, `Producto`, `Empleado`, `Usuario`, `Bienvenido`, and `Prueba` controllers check that session value before serving protected pages.
-- Controllers use CodeIgniter's query builder via models. The corresponding model files are under `application/models/`; views are under `application/views/`.
-- The project has no application-level test command or database migration workflow evident in the repository. `system/` is framework code; prefer changing `application/` rather than the framework.
+- Each module (Users, Customers, Products, Categories, ActivityLog) is a full-page Livewire component at `app/Livewire/<Module>/Index.php` with a view in `resources/views/livewire/<module>/index.blade.php`. Create/edit happens in a Flux modal on the index page.
+- Validation and saving live in form objects in `app/Livewire/Forms/`.
+- `App\Livewire\Concerns\WithSearchAndSort` provides search, whitelisted sorting (`sortableColumns()`) and URL-bound pagination. Lists are fixed at 10 rows per page on purpose; users are expected to search instead.
+- Layouts: `layouts::app` (default, sidebar) and `layouts::guest` (login). The layout prints `$title` only if set; components set it with `#[Title]`.
+- Sidebar links come from `config/navigation.php`; a link may declare `'can' => '<gate>'` to hide it. `active` uses route patterns such as `users.*`.
+- Reuse `x-page`, `x-page-header` and `x-common.delete-confirmation` (anonymous Blade components) for new screens.
 
-## Code-derived table inventory
+## Auth and access
 
-The field names below are used or expected by the application code. SQL types, nullability, primary keys, unique constraints, indexes, defaults, and relationships are not declared in this repository.
+- Login is a Livewire component (`App\Livewire\Auth\Login`); logout is `LogoutController`.
+- `EnsurePasswordIsChanged` redirects users with `change_password = true` to `/profile`. New users and admin password resets set this flag.
+- `RoleEnum` and `QuestionTypeEnum` (in `app/`) are non-backed enums. The DB stores the case **name** as a string and `User` has no enum cast, so `$user->role` is a string (e.g. `'ADMIN'`). Use `Rule::in(array_column(RoleEnum::cases(), 'name'))`, not `Rule::enum`. In factories and tests assign `RoleEnum::X->name`; enum objects break JSON encoding (including the audit log).
+- Gate `view-activity-log` (in `AppServiceProvider`) allows ADMIN, SUPERVISOR and TECHNICIAN. No other module has role restrictions or policies yet.
+- Users cannot delete themselves.
 
-### `cliente` — actively queried and written
+## Audit logging
 
-| Column | Evidence in application | Notes |
-| --- | --- | --- |
-| `ap_cliente` | Insert and update in `application/models/cliente_model.php` | Customer paternal surname. |
-| `am_cliente` | Insert and update in `application/models/cliente_model.php` | Customer maternal surname. |
-| `nombre_cliente` | Insert and update in `application/models/cliente_model.php` | Customer name. |
-| `domicilio` | Insert and update in `application/models/cliente_model.php` | Address. |
-| `numero` | Insert, lookup, update predicate, and deactivation predicate in `application/models/cliente_model.php` | Used as the customer identifier in code; its database type and uniqueness are unverified. |
-| `status` | Active-list filter and deactivation update in `application/models/cliente_model.php` | Active rows are selected with `status = 1`; deactivation writes `0`. Creation does not explicitly set it. |
+- Models using `App\Models\Concerns\Auditable` (User, Customer, Product, Category) log created, updated and deleted events, dirty attributes only, excluding `password`, `remember_token` and `settings`. Log name is the snake-case plural of the model.
+- `AppServiceProvider` listens to `Login`, `Logout` and `Failed` and logs events `login`, `logout`, `login_failed` in the `auth` log. Password changes log `password_changed` (own) and `password_reset` (admin).
+- Add `Auditable` to new models that should be tracked. Never log secrets.
 
-### `producto` — partly implemented
+## Settings and theme
 
-| Column | Evidence in application | Notes |
-| --- | --- | --- |
-| `nombre_producto` | Insert in `application/models/producto_model.php` | Product name. |
-| `monto_producto` | Insert in `application/models/producto_model.php` | Product price; numeric type/precision are not established by code. |
-| `foto_producto` | Insert in `application/models/producto_model.php` | Image value/path. The view prefixes it with `fotos/`. |
-| `descripcion_producto` | Insert in `application/models/producto_model.php` | Product description. |
-| `codigo_barras` | Lookup in `application/models/producto_model.php`; displayed by `application/controllers/producto.php` | Used to find/display a product; uniqueness and generation are not implemented here. |
-| `status` | Active-list filter in `application/models/producto_model.php` | Listing selects `status = 1`; product creation does not explicitly set it. |
+Per-user preferences are stored in the `users.settings` JSON column and read with `$user->setting($key, $default)`. The layout seeds Flux's `localStorage` keys (`flux.appearance`, `flux-sidebar-collapsed-desktop`) from them. Tailwind 4 needs the `@custom-variant dark` line in `resources/css/app.css` for the class-based dark mode.
 
-Product creation is implemented in the model/controller. Product `baja()` and `modificacion()` controller methods are empty even though the listing view renders action links.
+## Business rules
 
-### `usuario` — login lookup only
+- Categories cannot be deleted while they have products.
+- Unique validation ignores soft-deleted rows (`->whereNull('deleted_at')`).
+- Product images go to the `public` disk (run `php artisan storage:link`); updating replaces the old file.
+- `Customer::name` is a computed accessor (first + last name).
 
-| Column | Evidence in application | Notes |
-| --- | --- | --- |
-| `username` | Equality filter in `application/models/usuario_model.php` | Username used to find an account. |
-| `pass` | Equality filter in `application/models/usuario_model.php` | Login passes `md5($password)` to the model. The stored representation is not otherwise defined here; verify existing data before any authentication change. |
+## Conventions
 
-No account creation, password update, or account deactivation operation is implemented in this model.
+- Create files with `php artisan make:*`, pass `--no-interaction`, and run `vendor/bin/pint --dirty --format agent` after PHP changes.
+- Every feature gets Pest feature tests in `tests/Feature` (use `RefreshDatabase`; use `->fresh()` on factory models when checking `role`).
+- Run `pnpm run build` after CSS or class changes; run `php artisan view:clear` after deleting components.
+- Flux free has no chart component; the dashboard chart is plain CSS bars. Adding a chart library needs approval.
+- Do not change dependencies without approval.
 
-### Employee-shaped fields — unconfirmed table
+## Status
 
-`application/controllers/empleado.php` maps the following result keys: `ap_empleado`, `am_empleado`, `nombre_empleado`, `numero`, and `domicilio`. However, `application/models/empleado_model.php` contains empty methods and does not query or write a table. These names suggest an employee record shape but do **not** confirm that an `empleado` table exists or that these columns are present in the database.
-
-### Database settings and limits
-
-`application/config/database.php` selects the `default` MySQLi connection and names the database `telcom`. This is configuration, not a schema definition. The models use `SELECT *` for customer and product reads, so runtime records may include additional columns not identifiable from the source.
-
-No foreign-key relationships are expressed in the application code. Do not infer that `cliente.numero` or `producto.codigo_barras` is a primary key, or infer database column types from HTML input controls or PHP variable names.
-
-## Existing conventions and behavior
-
-- Keep the existing Spanish controller, model, method, and database identifiers when making localized changes.
-- Controller/model names follow CodeIgniter's conventional mapping, e.g. `Producto` / `Producto_model` and `application/models/producto_model.php`.
-- Customer records are listed only when `status = 1`; customer deactivation is a soft update to `status = 0`.
-- Product records are listed only when `status = 1`; no product deactivation operation is currently implemented.
-- The login model counts matching rows in `usuario` using `username` and a supplied `pass` value. The controller supplies the MD5 digest of the submitted password.
-- Customer and product forms/controllers uppercase submitted strings. Avoid changing case normalization or identifier semantics without checking existing production data.
-- Login and application state depend on CodeIgniter sessions. Protected controllers redirect unauthenticated users to `login`.
-
-## Guidance for changes
-
-1. Read the relevant controller, model, and view together before changing user-visible behavior.
-2. Treat this context's inventory as observed field usage, not a complete or canonical schema.
-3. Do not fabricate SQL schema, seed credentials, relations, or defaults. Obtain them from a trusted database schema/source before making database changes.
-4. Keep environment-specific database configuration out of documentation and version control.
-5. Preserve compatibility with the bundled legacy framework and verify PHP syntax. If a database is available, manually exercise the routes affected by the change.
+Done: Users, Customers, Products, Categories, Profile, Settings, Activity Log, Dashboard, Login.
+Pending: Surveys (migration exists, `Survey` model is empty, `/surveys` is a placeholder; the migration `down()` only drops `surveys`), policies and role checks across modules, survey widgets on the dashboard. `ExampleTest` fails (302 vs 200) and predates this work.

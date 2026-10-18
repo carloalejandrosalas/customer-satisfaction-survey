@@ -1,67 +1,34 @@
-# Database structure (code-derived)
+# Database structure
 
-This is the structure the application code currently expects, extracted from its models and controller usage. It is **not** a verified snapshot of the live database: no schema dump, migrations, or DDL are present in the repository. The actual database may contain additional columns or differ in types and constraints.
+Defined by the migrations in `database/migrations`. SQLite is the default (tests use in-memory SQLite); MariaDB is supported. Tables marked (SD) use soft deletes (`deleted_at`). All tables have `id` and timestamps unless noted.
 
-The configured connection in `application/config/database.php` uses MySQLi and names the database `telcom`. Connection configuration does not establish the schema.
+## users (SD)
 
-## Confirmed table usage
+`name`, `email` (unique), `email_verified_at`, `password`, `state`, `city`, `address`, `role` (enum of `RoleEnum` case names: ADMIN, SUPERVISOR, OPERATOR, TECHNICIAN), `phone_number`, `change_password` (bool, default false), `settings` (JSON, nullable: `theme`, sidebar preference), `remember_token`.
 
-“Confirmed” here means the application explicitly queries or writes the table name and listed columns; it does not confirm the physical database schema.
+Also standard Laravel tables: `password_reset_tokens`, `sessions`, `cache`, `jobs`.
 
-### `cliente`
+## categories (SD)
 
-| Column | Observed use |
-| --- | --- |
-| `ap_cliente` | Inserted and updated as the paternal surname. |
-| `am_cliente` | Inserted and updated as the maternal surname. |
-| `nombre_cliente` | Inserted and updated as the customer name. |
-| `domicilio` | Inserted and updated as the address. |
-| `numero` | Inserted, looked up, and used as the predicate for update/deactivation. The code treats it as the customer identifier. |
-| `status` | Active listing filters on `1`; deactivation updates to `0`. Insert does not explicitly set it. |
+`name`, `description`.
 
-Evidence: `application/models/cliente_model.php`; the controller and views display `numero` as the customer's phone number.
+## products (SD)
 
-### `producto`
+`category_id` (FK categories), `name`, `price` (decimal 10,2), `image` (nullable path on the `public` disk), `description`, `sku` (indexed), `upc` (nullable, indexed), `status` (bool, default true).
 
-| Column | Observed use |
-| --- | --- |
-| `nombre_producto` | Inserted as the product name. |
-| `monto_producto` | Inserted as the product price. |
-| `foto_producto` | Inserted as the image value/path; the listing view reads it below `fotos/`. |
-| `descripcion_producto` | Inserted as the product description. |
-| `codigo_barras` | Used in product lookup and displayed in the listing. The code does not generate it. |
-| `status` | Active listing filters on `1`. Insert does not explicitly set it. |
+## customers (SD)
 
-Evidence: `application/models/producto_model.php` and `application/controllers/producto.php`.
+`first_name`, `last_name`, `state`, `city`, `residence_address`, `phone_number` (indexed), `email_address` (indexed), `status` (bool, default true). `name` is an accessor, not a column.
 
-### `usuario`
+## activity_log
 
-| Column | Observed use |
-| --- | --- |
-| `username` | Equality filter in the login lookup. |
-| `pass` | Equality filter in the login lookup. The controller passes `md5($password)` as the value to compare. |
+From spatie/laravel-activitylog: `log_name`, `description`, `subject` (morph), `event`, `causer` (morph), `attribute_changes` (JSON), `properties` (JSON). Used events: `created`, `updated`, `deleted`, `login`, `logout`, `login_failed`, `password_changed`, `password_reset`.
 
-Evidence: `application/models/usuario_model.php` and `application/controllers/login.php`.
+## Survey tables (migration only, no models or UI yet)
 
-## Unconfirmed employee data
+- `surveys`: `category_id`, `creator_id` (user), `name`, `description`, `status`.
+- `surveys_customers`: `survey_id`, `customer_id`, `assigned_user_id`.
+- `survey_questions`: `survey_id`, `text`, `type` (enum of `QuestionTypeEnum`: YES_NO, POINTS, TEXT).
+- `survey_answers`: `survey_customer_id`, `survey_question_id`, `value`.
 
-The employee controller expects query result keys `ap_empleado`, `am_empleado`, `nombre_empleado`, `numero`, and `domicilio`. However, `application/models/empleado_model.php` has empty methods and does not issue any database queries. Therefore, neither an `empleado` table nor those columns can be confirmed from current database access code.
-
-## Schema details not available
-
-The application source does not define:
-
-- Column data types, lengths, precision, character sets, or collations.
-- Nullability, default values, generated values, or auto-increment behavior.
-- Primary keys, unique constraints, indexes, or foreign keys.
-- Whether a physical `empleado` table exists or whether tables contain additional fields.
-
-In particular, `cliente.numero` and `producto.codigo_barras` are used as lookup values, but the code does not prove that either is a primary key or unique. Do not use this document alone to create or alter a production schema. Verify against a database metadata export or authoritative DDL first.
-
-## Source map
-
-- Customer data access: `application/models/cliente_model.php`
-- Product data access: `application/models/producto_model.php`
-- Login data access: `application/models/usuario_model.php`
-- Employee result mapping and stub model: `application/controllers/empleado.php`, `application/models/empleado_model.php`
-- Database connection settings: `application/config/database.php`
+None of the survey columns have foreign key constraints yet (plain indexed ids), and the migration's `down()` only drops `surveys`.

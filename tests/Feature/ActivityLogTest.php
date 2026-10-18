@@ -1,11 +1,14 @@
 <?php
 
-use App\Enums\RoleEnum;
 use App\Livewire\Auth\Login;
 use App\Models\Category;
 use App\Models\User;
+use App\RoleEnum;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Spatie\Activitylog\Models\Activity;
+
+uses(RefreshDatabase::class);
 
 function userWithRole(RoleEnum $role): User
 {
