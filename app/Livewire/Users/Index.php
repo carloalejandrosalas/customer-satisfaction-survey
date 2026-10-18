@@ -5,9 +5,11 @@ namespace App\Livewire\Users;
 use App\Livewire\Forms\UserForm;
 use App\Models\User;
 use Flux\Flux;
+use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
+#[Title('User Management')]
 class Index extends Component
 {
     // GET parameters for sorting, pagination, and search.
