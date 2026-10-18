@@ -1,4 +1,5 @@
 <x-page>
+
     <x-page-header eyebrow="Users" title="User Management" subtitle="Manage your application's users.">
         <flux:input wire:model.live.debounce.300ms="search" icon="magnifying-glass"
             placeholder="Name, Email, or Phone #" />
@@ -43,8 +44,10 @@
                     <flux:table.cell class="whitespace-nowrap">{{ $user->created_at }}</flux:table.cell>
                     <flux:table.cell class="whitespace-nowrap">
                         <flux:button icon="pencil-square" size="sm" wire:click="editUser({{ $user }})" />
-                        <flux:button icon="trash" size="sm" color="red"
-                            wire:click="showConfirmDelete({{ $user }})" />
+                        @if ($user->isNot(auth()->user()))
+                            <flux:button icon="trash" size="sm" color="red"
+                                wire:click="showConfirmDelete({{ $user }})" />
+                        @endif
                     </flux:table.cell>
 
                 </flux:table.row>
@@ -53,7 +56,7 @@
     </flux:table>
 
     <!-- Create / Edit Modal (single modal, reused) -->
-    <flux:modal wire:model.self="isFormOpen" name="post-form" class="w-full max-w-md space-y-4">
+    <flux:modal name="user-form" class="w-full max-w-md space-y-4">
         <flux:heading size="lg">
             {{ $selectedUser ? 'Edit User' : 'New User' }}
         </flux:heading>
@@ -62,6 +65,9 @@
             <flux:fieldset>
                 <flux:input label="Name" wire:model="form.name" required />
                 <flux:input label="Email" wire:model="form.email" required />
+                @if ($selectedUser === null)
+                    <flux:input type="password" label="Password" wire:model="form.password" viewable required />
+                @endif
                 <flux:input label="Phone #" wire:model="form.phone_number" required />
                 <flux:input label="State" wire:model="form.state" required />
                 <flux:input label="City" wire:model="form.city" required />
@@ -77,12 +83,10 @@
 
                 <flux:spacer />
 
-                <flux:modal.close>
-                    <flux:button type="submit">Save</flux:button>
-                </flux:modal.close>
+                <flux:button type="submit">Save</flux:button>
 
                 <flux:modal.close>
-                    <flux:button wire:click="form.resetForm()" variant="ghost">Cancel</flux:button>
+                    <flux:button wire:click="form.resetForm" variant="ghost">Cancel</flux:button>
                 </flux:modal.close>
             </flux:fieldset>
         </form>

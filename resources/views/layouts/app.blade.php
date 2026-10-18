@@ -16,8 +16,7 @@
 
 <body class="min-h-dvh bg-zinc-50 text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
     @auth
-        <flux:sidebar sticky collapsible
-            class="border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+        <flux:sidebar sticky collapsible class="border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
             <flux:sidebar.header>
                 <flux:sidebar.brand href="{{ route('dashboard') }}" :name="config('app.name', 'Laravel')" />
                 <flux:sidebar.collapse
@@ -36,8 +35,7 @@
             <flux:sidebar.spacer />
 
             <flux:dropdown position="top" align="start" class="max-lg:hidden">
-                <flux:sidebar.profile :name="auth()->user()->name"
-                    :initials="str(auth()->user()->name)->initials()" />
+                <flux:sidebar.profile :name="auth()->user()->name" :initials="str(auth()->user()->name)->initials()" />
 
                 <flux:menu>
                     <flux:menu.item icon="user" wire:click="openProfileModal">Profile</flux:menu.item>
@@ -80,6 +78,11 @@
     <flux:main container class="py-6 sm:py-8">
         {{ $slot }}
     </flux:main>
+
+    @persist('toast')
+        <flux:toast />
+    @endpersist
+
 
     @fluxScripts
 </body>

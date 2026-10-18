@@ -4,7 +4,9 @@ namespace App\Livewire\Forms;
 
 use App\Models\User;
 use App\RoleEnum;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 use Livewire\Form;
 
 class UserForm extends Form
@@ -38,7 +40,7 @@ class UserForm extends Form
             'state' => ['required', 'string', 'max:50'],
             'city' => ['required', 'string', 'max:50'],
             'address' => ['required', 'string', 'max:50'],
-            'role' => ['required', Rule::enum(RoleEnum::class)],
+            'role' => ['required', Rule::in(array_column(RoleEnum::cases(), 'name'))],
             'phone_number' => ['required', 'string', 'max:50'],
         ];
 
@@ -53,7 +55,8 @@ class UserForm extends Form
         return array_merge(
             $commonFields,
             [
-                'password' => ['required', 'string', 'password', 'max:50'],
+                'email' => ['required', 'string', 'email', 'max:50', Rule::unique('users')],
+                'password' => ['required', 'string', Password::defaults(), 'max:50'],
             ]
         );
     }
@@ -78,7 +81,7 @@ class UserForm extends Form
             ->all();
     }
 
-    public function save()
+    public function store()
     {
         $this->validate();
 
@@ -94,16 +97,32 @@ class UserForm extends Form
 
         $userData = [];
 
-        // If creating a new user, include the password in the fields to be saved.
-        if (! isset($this->user) || ! $this->user) {
-            $commonFields[] = 'password';
-        }
-
         // Retrieve only the fields that are present in the $commonFields array.
         $userData = $this->only($commonFields);
 
-        // Depending on whether the user exists, update the existing user or create a new one.
-        isset($this->user) && $this->user ? $this->user->update($userData) : User::create($userData);
+        User::create([
+            ...$userData,
+            'password' => Hash::make($this->password),
+        ]);
+
+        $this->reset();
+    }
+
+    public function update()
+    {
+        $this->validate();
+
+        if ($this->user) {
+            $this->user->update($this->only([
+                'name',
+                'email',
+                'state',
+                'city',
+                'address',
+                'phone_number',
+                'role',
+            ]));
+        }
 
         $this->reset();
     }
@@ -117,6 +136,7 @@ class UserForm extends Form
         $this->address = '';
         $this->phone_number = '';
         $this->role = '';
+        $this->password = '';
         $this->user = null;
     }
 }
