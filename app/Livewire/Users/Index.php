@@ -2,29 +2,18 @@
 
 namespace App\Livewire\Users;
 
+use App\Livewire\Concerns\WithSearchAndSort;
 use App\Livewire\Forms\UserForm;
 use App\Models\User;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Title;
-use Livewire\Attributes\Url;
 use Livewire\Component;
 
 #[Title('User Management')]
 class Index extends Component
 {
-    // GET parameters for sorting, pagination, and search.
-    #[Url(except: 'created_at')]
-    public $sortBy = 'created_at';
-
-    #[Url(except: 'desc')]
-    public $sortDirection = 'desc';
-
-    #[Url(except: 1)]
-    public $page = 1;
-
-    #[Url(except: '')]
-    public $search = '';
+    use WithSearchAndSort;
 
     // Selection state for the currently selected user.
     public ?User $selectedUser = null;
@@ -75,6 +64,32 @@ class Index extends Component
     }
 
     /**
+     * Open the modal to set a new password for another user.
+     */
+    public function showChangePassword(User $user): void
+    {
+        $this->selectedUser = $user;
+        $this->form->resetForm();
+        $this->form->setUser($user);
+        $this->form->password = '';
+        Flux::modal('change-password')->show();
+    }
+
+    /**
+     * Set the new password and require the user to change it on their next visit.
+     */
+    public function changePassword(): void
+    {
+        if ($this->selectedUser?->isNot(auth()->user())) {
+            $this->form->changePassword();
+            Flux::toast(variant: 'success', text: 'Password updated. The user must change it on next login.');
+        }
+
+        $this->selectedUser = null;
+        Flux::modal('change-password')->close();
+    }
+
+    /**
      * Show the confirmation modal for deleting a user.
      */
     public function showConfirmDelete(User $user)
@@ -97,34 +112,21 @@ class Index extends Component
         Flux::modal('confirm-delete')->close();
     }
 
-    public function updatedSearch()
+    protected function sortableColumns(): array
     {
-        $this->page = 1;
-        $this->sortBy = 'created_at';
-        $this->sortDirection = 'desc';
-    }
-
-    public function sort(string $column)
-    {
-        if ($this->sortBy === $column) {
-            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
-        } else {
-            $this->sortBy = $column;
-            $this->sortDirection = 'asc';
-        }
-    }
-
-    public function gotoPage(int $page)
-    {
-        $this->page = $page;
+        return ['name', 'email', 'phone_number', 'created_at'];
     }
 
     public function render()
     {
-        $users = User::where('name', 'like', "%{$this->search}%")
-            ->orWhere('email', 'like', "%{$this->search}%")
-            ->orWhere('phone_number', 'like', "%{$this->search}%")
-            ->orderBy($this->sortBy, $this->sortDirection)
+        $users = User::query()
+            ->when($this->search !== '', fn ($query) => $query->where(
+                fn ($query) => $query
+                    ->where('name', 'like', "%{$this->search}%")
+                    ->orWhere('email', 'like', "%{$this->search}%")
+                    ->orWhere('phone_number', 'like', "%{$this->search}%")
+            ))
+            ->orderBy($this->resolvedSortBy(), $this->resolvedSortDirection())
             ->paginate(10, ['*'], 'page', $this->page);
 
         return view('livewire.users.index', [

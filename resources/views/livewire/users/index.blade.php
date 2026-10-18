@@ -43,10 +43,13 @@
 
                     <flux:table.cell class="whitespace-nowrap">{{ $user->created_at }}</flux:table.cell>
                     <flux:table.cell class="whitespace-nowrap">
-                        <flux:button icon="pencil-square" size="sm" wire:click="editUser({{ $user }})" />
+                        <flux:button icon="pencil-square" size="sm" wire:click="editUser({{ $user->id }})" />
                         @if ($user->isNot(auth()->user()))
-                            <flux:button icon="trash" size="sm" color="red"
-                                wire:click="showConfirmDelete({{ $user }})" />
+                            @if ($user->isNot(auth()->user()))
+                            <flux:button icon="key" size="sm" wire:click="showChangePassword({{ $user->id }})" />
+                        @endif
+                        <flux:button icon="trash" size="sm" color="red"
+                                wire:click="showConfirmDelete({{ $user->id }})" />
                         @endif
                     </flux:table.cell>
 
@@ -89,6 +92,27 @@
                     <flux:button wire:click="form.resetForm" variant="ghost">Cancel</flux:button>
                 </flux:modal.close>
             </flux:fieldset>
+        </form>
+    </flux:modal>
+
+    <flux:modal name="change-password" class="w-full max-w-md space-y-4">
+        <div>
+            <flux:heading size="lg">Change password</flux:heading>
+            <flux:subheading>
+                Set a new password for {{ $selectedUser?->name }}. They will be asked to change it on their next visit.
+            </flux:subheading>
+        </div>
+
+        <form wire:submit="changePassword" class="space-y-4">
+            <flux:input type="password" label="New password" wire:model="form.password" viewable required />
+
+            <div class="flex gap-2">
+                <flux:spacer />
+                <flux:modal.close>
+                    <flux:button wire:click="form.resetForm" variant="ghost">Cancel</flux:button>
+                </flux:modal.close>
+                <flux:button type="submit" variant="primary">Save password</flux:button>
+            </div>
         </form>
     </flux:modal>
 

@@ -39,7 +39,7 @@ class UserForm extends Form
             'email' => ['required', 'string', 'email', 'max:50'],
             'state' => ['required', 'string', 'max:50'],
             'city' => ['required', 'string', 'max:50'],
-            'address' => ['required', 'string', 'max:50'],
+            'address' => ['required', 'string', 'max:255'],
             'role' => ['required', Rule::in(array_column(RoleEnum::cases(), 'name'))],
             'phone_number' => ['required', 'string', 'max:50'],
         ];
@@ -103,6 +103,7 @@ class UserForm extends Form
         User::create([
             ...$userData,
             'password' => Hash::make($this->password),
+            'change_password' => true,
         ]);
 
         $this->reset();
@@ -125,6 +126,23 @@ class UserForm extends Form
         }
 
         $this->reset();
+    }
+
+    /**
+     * Sets a new password for the selected user and forces them to change it on their next visit.
+     */
+    public function changePassword(): void
+    {
+        $this->validateOnly('password', [
+            'password' => ['required', 'string', Password::defaults(), 'max:50'],
+        ]);
+
+        $this->user?->update([
+            'password' => Hash::make($this->password),
+            'change_password' => true,
+        ]);
+
+        $this->resetForm();
     }
 
     public function resetForm()

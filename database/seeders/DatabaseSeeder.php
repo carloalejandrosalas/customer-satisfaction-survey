@@ -27,6 +27,9 @@ class DatabaseSeeder extends Seeder
         // Generate several users accounts first.
         $this->call([
             UserSeeder::class,
+            CategorySeeder::class,
+            ProductSeeder::class,
+            CustomerSeeder::class,
         ]);
     }
 }

@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $title . ' | ' . config('app.name') ?? config('app.name', 'Laravel') }}</title>
+    <title>{{ isset($title) ? $title . ' | ' . config('app.name') : config('app.name', 'Laravel') }}</title>
 
     <!-- Fonts & Styles -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -38,7 +38,7 @@
                 <flux:sidebar.profile :name="auth()->user()->name" :initials="str(auth()->user()->name)->initials()" />
 
                 <flux:menu>
-                    <flux:menu.item icon="user" wire:click="openProfileModal">Profile</flux:menu.item>
+                    <flux:menu.item icon="user" :href="route('profile')" wire:navigate>Profile</flux:menu.item>
                     <flux:menu.item icon="cog-6-tooth" wire:click="openSettingsModal">Settings</flux:menu.item>
                     <flux:menu.separator />
                     <form method="POST" action="{{ route('logout') }}">
@@ -60,7 +60,7 @@
                 <flux:profile :initials="str(auth()->user()->name)->initials()" />
 
                 <flux:menu>
-                    <flux:menu.item icon="user" wire:click="openProfileModal">Profile</flux:menu.item>
+                    <flux:menu.item icon="user" :href="route('profile')" wire:navigate>Profile</flux:menu.item>
                     <flux:menu.item icon="cog-6-tooth" wire:click="openSettingsModal">Settings</flux:menu.item>
                     <flux:menu.separator />
                     <form method="POST" action="{{ route('logout') }}">
