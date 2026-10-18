@@ -35,16 +35,33 @@
 <body class="min-h-dvh bg-zinc-50 text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
     @auth
         <flux:sidebar sticky collapsible class="border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-            <flux:sidebar.header>
-                <flux:sidebar.brand href="{{ route('dashboard') }}" :name="config('app.name', 'Laravel')" />
+            <flux:sidebar.header class="mb-2">
+                <a href="{{ route('dashboard') }}" wire:navigate
+                    class="flex min-w-0 flex-1 items-center gap-3 rounded-xl p-1 in-data-flux-sidebar-collapsed-desktop:hidden">
+                    <span
+                        class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/30">
+                        <flux:icon name="chat-bubble-left-right" class="size-5" />
+                    </span>
+                    <span class="min-w-0 leading-tight">
+                        <span
+                            class="block truncate text-base font-semibold tracking-tight text-zinc-900 dark:text-white">{{ config('app.name', 'Laravel') }}</span>
+                        <span class="block truncate text-xs text-zinc-500 dark:text-zinc-400">Customer Surveys</span>
+                    </span>
+                </a>
+
                 <flux:sidebar.collapse
                     class="in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />
             </flux:sidebar.header>
 
-            <flux:sidebar.nav>
+            <flux:sidebar.nav class="gap-1">
+                <p
+                    class="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wider text-zinc-400 in-data-flux-sidebar-collapsed-desktop:hidden dark:text-zinc-500">
+                    Menu
+                </p>
                 @foreach (config('navigation.sidebar_links') as $link)
-                    <flux:sidebar.item :icon="$link['icon']" :href="route($link['route'])"
-                        :current="request()->routeIs($link['active'] ?? $link['route'])">
+                    <flux:sidebar.item :icon="$link['icon']" :href="route($link['route'])" wire:navigate
+                        :current="request()->routeIs($link['active'] ?? $link['route'])"
+                        class="h-11! gap-3.5 **:data-content:text-base **:data-flux-icon:size-5 data-current:bg-indigo-50! data-current:text-indigo-700! data-current:font-semibold dark:data-current:bg-indigo-500/15! dark:data-current:text-indigo-300!">
                         {{ $link['label'] }}
                     </flux:sidebar.item>
                 @endforeach
