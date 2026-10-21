@@ -5,6 +5,7 @@ namespace App\Livewire\Profile;
 use App\Livewire\Forms\PasswordForm;
 use App\Livewire\Forms\ProfileForm;
 use Flux\Flux;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
@@ -17,21 +18,21 @@ class Show extends Component
 
     public function mount(): void
     {
-        $this->profile->setUser(auth()->user());
+        $this->profile->setUser(Auth::user());
     }
 
     public function updateProfile(): void
     {
-        $this->profile->update(auth()->user());
+        $this->profile->update(Auth::user());
 
         Flux::toast(variant: 'success', text: 'Profile successfully updated.');
     }
 
     public function updatePassword(): void
     {
-        $wasForced = auth()->user()->change_password;
+        $wasForced = Auth::user()->change_password;
 
-        $this->passwordForm->update(auth()->user());
+        $this->passwordForm->update(Auth::user());
 
         Flux::toast(variant: 'success', text: 'Password successfully updated.');
 

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('creator_id')->index(); // user_id
             $table->string('name');
             $table->text('description');
-            $table->boolean('status')->default(true);
+            $table->softDeletes();
             $table->timestamps();
         });
 
@@ -27,6 +27,7 @@ return new class extends Migration
             $table->foreignId('survey_id');
             $table->foreignId('customer_id');
             $table->foreignId('assigned_user_id');
+            $table->softDeletes();
             $table->timestamps();
         });
 
@@ -53,6 +54,9 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('survey_answers');
+        Schema::dropIfExists('survey_questions');
+        Schema::dropIfExists('surveys_customers');
         Schema::dropIfExists('surveys');
     }
 };
